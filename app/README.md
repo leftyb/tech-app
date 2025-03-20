@@ -12,3 +12,5 @@ e.g.:
 e.g.:
 `docker push leftybanos/tech-app:latest`
 
+***INFO***
+Make sure you update the `deployment` at `app-manifests/all-manifests.yaml`

@@ -1,10 +1,27 @@
 # Demo app for tech challenge
 
-On this repository we developed the solution requested for the tech challenge.
+On this repository we developed the solution requested for a tech challenge.
 Requirements:
 
-- Not displayed here as this is a public repo.
-- ...
+- Build an application that exposes a REST
+endpoint that returns the following JSON payload
+
+```
+{
+"message": "Automate all the things!",
+"timestamp": 1529729125
+}
+```
+
+- The application must be deployed on a Kubernetes cluster running in a public cloud provider.
+  - The provisioning of the cluster as well as the deployment of the application must be done through code.
+- Commit all code to a public git repository.
+- Include a `README.md` containing detailed directions on how to run, what is running, and how to clean up.
+- Provide a single command to launch the environment and deploy the application.
+  - Some prerequisites are OK as long as they are properly documented.
+- We should be able to deploy and run the application in our own public cloud accounts.
+- Include some form of automated tests to validate the environment.
+
 
 ## Modes
 
@@ -72,12 +89,12 @@ In order to properly exectute the tech challenge following are requested on the 
 
 - create a `aws_credentials.sh` file at the `./` of the repository:
 
-  sh```
+```
     # aws_credentials.sh
     export AWS_ACCESS_KEY_ID="YOUR_AWS_ACCESS_KEY"
     export AWS_SECRET_ACCESS_KEY="YOUR_AWS_SECRET_KEY"
     export AWS_DEFAULT_REGION="AWS_REGION_TO_CREATE_RESOURCES"
-  ```
+```
 
 #### Execution
 
@@ -87,11 +104,11 @@ Run this at `./` directory inside the repository: `devbox run --env ENV=prod set
 - `-q`: suppress devbox logs
 
 - `-auto-approve` Is disabled, you can enable it using `TF_AUTO_APPROVE=true` e.g. `devbox run --env ENV=prod --env TF_AUTO_APPROVE=true setup-all -q`
-  - WARNING: This will apply all terraform resources withought manual input.
+  - WARNING: This will apply all terraform resources without manual input.
 
 Steps that are done automatically:
 
-- Will install in an isolated shells environment all necessary packages (check `devbox.json`).
+- Will install in an isolated shell environment all necessary packages (check `devbox.json`).
 - Create all `AWS` resources with `terraform`
 - Apply the necessary manifests for `Karpenter` 
 - Apply necessary manifest files for the application.
@@ -119,7 +136,7 @@ A workflow is as well available just for the `prod` mode.
 - Create: Uses same `devbox` script to create the `EKS` cluster and apply the `app` manifests and run the tests.
   - The bad thing with this is that `devbox` setup takes too long. Up to `30 minutes`
 - Destroy: Uses same `devbox` scripts to destroy the created `AWS` resources.
-  - Please refair to [ Manually Destroy Section](#destroy-all-infrastructure-manually) for some additional information.
+  - Please refair to [ Manually Destroy Section](#destroy-all-infrastucture-manually) for some additional information.
 - argocd: Deploys `argocd` at the created cluster, and applies an argocd application that is linked to the `app-manifests` dir in same repo, where the demo app manifests are located. 
 
 ## Addition information
@@ -130,18 +147,7 @@ Additional information regarding other details.
 
 All related files exist at the `app` directory.
 
-#### Docker build image
-
-`docker build -t your-dockerhub-username/your-app-name:tag .`
-
-#### Docker push image
-
-`docker push your-dockerhub-username/your-app-name:tag`
-
-***INFO***
-Make sure you update the `deployment` at `app-manifests/all-manifests.yaml`
-
-#### Destroy all infrastucture manually
+### Destroy all infrastucture manually
 
 Some resources might not get deleted due to dependencies when run the `clear-up` script.
 
