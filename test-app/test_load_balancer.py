@@ -15,7 +15,7 @@ class TestAPI(unittest.TestCase):
         return external_ip
 
 
-    def wait_for_service(self, max_retries=10, delay=5):
+    def wait_for_service(self, max_retries=50, delay=5):
         """
         Wait for the service to be available and return the response JSON.
         """

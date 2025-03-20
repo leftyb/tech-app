@@ -1,0 +1,77 @@
+# Ignore environment files
+.env
+
+# Ignore AWS credentials file
+aws_credentials.sh
+
+# Terraform 
+# Ignore Terraform state files and backups
+*.tfstate
+*.tfstate.*
+#*.tfvars
+*.tfvars.json
+
+# Ignore crash log files
+crash.log
+
+# Ignore override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Ignore .terraform directory (which contains plugins)
+.terraform/
+
+# Ignore terraform plan output
+*.plan
+
+# Ignore .terraform.lock.hcl (for dependency version locking)
+.terraform.lock.hcl
+
+# Devbox-related files
+.devbox/
+.devbox-lock.json
+
+# Virtual environments
+.venv/
+env/
+venv/
+__pycache__/
+
+# Operating system specific files
+.DS_Store
+Thumbs.db
+
+
+# Python bytecode files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+
+# Distribution/Packaging
+.Python
+build/
+dist/
+*.egg-info/
+
+# Testing
+.coverage
+nosetests.xml
+coverage.xml
+*.cover
+
+# PyInstaller
+# Uncomment if you're using PyInstaller
+#  /dist/
+#  /build/
+#  /*.spec
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/

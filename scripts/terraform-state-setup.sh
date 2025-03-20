@@ -36,18 +36,29 @@ fi
 
 #Check if the state file exists in S3
 if aws s3 ls "s3://${BUCKET}/${SERVICE_NAME}" >/dev/null 2>&1; then
+  
   echo "Terraform state file already exist"
   terraform_init_remote
 else  
+  
   terraform_init_remote
   terraform import module.s3bucket.aws_s3_bucket.tfstate_bucket ${BUCKET}
 fi
 
 # Plan the production deployment
-terraform plan 
+terraform plan
+if [ $? -ne 0 ]; then
+  echo "Terraform plan failed"
+  exit 1  
+fi
 
 # Apply the production deployment
 terraform apply ${AUTO_APPROVE_FLAG}
+
+if [ $? -ne 0 ]; then
+    echo "Terraform apply was rejected or failed. Exiting script..."
+    exit 1  
+fi
 
 #Check if the state file exists in S3
 if aws s3 ls "s3://${BUCKET}/${SERVICE_NAME}" >/dev/null 2>&1; then

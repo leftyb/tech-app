@@ -17,11 +17,15 @@ Two modes of execution are provided `dev` and `prod`
 #### Prerequisites  
 
 - [Devbox](https://www.jetify.com/docs/devbox/cli_reference/devbox_shell/).
+  - Install information can be found [here](https://github.com/jetify-com/devbox?tab=readme-ov-file#installing-devbox)
 - Docker running on the local machine.
 
 #### Execution
 
-Run this at `./` directory inside the repository: `devbox shell --env ENV=dev`
+Run this at `./` directory inside the repository: `devbox run --env ENV=dev setup-all -q`
+
+- `--env ENV=dev`: will be executed on Kind cluster
+- `-q`: suppress devbox logs
 
 Steps that are done automatically:
 
@@ -30,9 +34,13 @@ Steps that are done automatically:
 - Run the necessary manifest files for the application.
 - Run the necessary tests
 
+#### Run tests
+
+- Run just the tests after `setup` with `devbox run --env ENV=dev run-tests`
+
 #### Clean up
 
-Run this at `./` directory inside the repository: `devbox run clean-all --env ENV=dev`
+Run this at `./` directory inside the repository: `devbox run --env ENV=dev clean-all -q`
 
 Steps that are done automatically:
 
@@ -47,6 +55,8 @@ Steps that are done automatically:
 
 In order to properly exectute the tech challenge following are requested on the local environment:
 
+- [Devbox](https://www.jetify.com/docs/devbox/cli_reference/devbox_shell/).
+  - Install information can be found [here](https://github.com/jetify-com/devbox?tab=readme-ov-file#installing-devbox)
 - AWS valid credentials (as AWS has been choosen the provider to be used).
   - Make sure that `AWS Role` used has necessary permitions for the AWS resources to be created (most at least to be able to `create`, `list`, `delete` ):
     - VPC (plus dependencies: subnets, routing tables, etc).
@@ -59,20 +69,25 @@ In order to properly exectute the tech challenge following are requested on the 
     - Check the `infra` dir for all terraform code used.
 
 #### configuration
- 
- - create a `aws_credentials.sh` file at the `./` of the repository:
-    ```
+
+- create a `aws_credentials.sh` file at the `./` of the repository:
+
+  sh```
     # aws_credentials.sh
     export AWS_ACCESS_KEY_ID="YOUR_AWS_ACCESS_KEY"
     export AWS_SECRET_ACCESS_KEY="YOUR_AWS_SECRET_KEY"
     export AWS_DEFAULT_REGION="AWS_REGION_TO_CREATE_RESOURCES"
-    ```
+  ```
 
 #### Execution
 
-Run this at `root` directory inside the repository: `devbox shell --env ENV=prod`
+Run this at `./` directory inside the repository: `devbox run --env ENV=prod setup-all -q`
 
-- `-auto-approve` Is disabled, you can enable it using `TF_AUTO_APPROVE=true` e.g. `devbox shell --env ENV=prod --env TF_AUTO_APPROVE=true`
+- `--env ENV=prod`: will be executed on AWS EKS cluster (will be created as well with Terraform).
+- `-q`: suppress devbox logs
+
+- `-auto-approve` Is disabled, you can enable it using `TF_AUTO_APPROVE=true` e.g. `devbox run --env ENV=prod --env TF_AUTO_APPROVE=true setup-all -q`
+  - WARNING: This will apply all terraform resources withought manual input.
 
 Steps that are done automatically:
 
@@ -82,24 +97,38 @@ Steps that are done automatically:
 - Apply necessary manifest files for the application.
 - Run the necessary tests.
 
+#### Run tests
+
+- Run just the tests after `setup` with `devbox run --env ENV=prod run-tests`
+
 #### Clean up
 
-Run this at `root` directory inside the repository: `devbox run clean-all --env ENV=prod`
+Run this at `./` directory inside the repository: `devbox run --env ENV=prod clean-all -q`
 
-- `-auto-approve` Is disabled, you can enable it using `TF_AUTO_APPROVE=true` e.g. `devbox run clean-all --env ENV=prod --env TF_AUTO_APPROVE=true`
+- `-auto-approve` Is disabled, you can enable it using `TF_AUTO_APPROVE=true` e.g. `devbox run --env ENV=prod --env TF_AUTO_APPROVE=true clean-all -q`
 
 Steps that are done automatically:
 
 - Deletes `AWS` cluster resources.
   - Including `s3bucket` where statefile is stored.
 
+## GitHub Workflows
+
+A workflow is as well available just for the `prod` mode.
+
+- Create: Uses same `devbox` script to create the `EKS` cluster and apply the `app` manifests and run the tests.
+  - The bad thing with this is that `devbox` setup takes too long. Up to `30 minutes`
+- Destroy: Uses same `devbox` scripts to destroy the created `AWS` resources.
+  - Please refair to [ Manually Destroy Section](#destroy-all-infrastructure-manually) for some additional information.
+- argocd: Deploys `argocd` at the created cluster, and applies an argocd application that is linked to the `app-manifests` dir in same repo, where the demo app manifests are located. 
+
 ## Addition information
 
 Additional information regarding other details.
 
 ### Docker Image
- 
- All related files exist at the `app` directory.
+
+All related files exist at the `app` directory.
 
 #### Docker build image
 
@@ -111,8 +140,6 @@ Additional information regarding other details.
 
 ***INFO***
 Make sure you update the `deployment` at `app-manifests/all-manifests.yaml`
-
-terraform state rm module.state-infra.aws_s3_bucket.tfstate_bucket
 
 #### Destroy all infrastucture manually
 
@@ -126,9 +153,9 @@ PLease make sure that you delete all the remaining resources manually if needed.
     - You can see which resources have not been deleted.
   - Try to apply again, and if not success delete them manually from the console.
   - Check it the S3 bucket `tech-app-state-bucket` is deleted as well.
-
+  - Check that all `ec2` instances are destroyed. Due to that are automatically created from `Karpenter` and not managed from `terraform`
+  - Check that all `VPC` resources are deleted.
 
 #### Details on execution
 
 `Devbox` is creating  an isolated shells environment. All installed packages will be installed locally at the repository directory (`.devbox` dir).
-

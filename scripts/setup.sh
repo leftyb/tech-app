@@ -72,7 +72,9 @@ elif [ "$ENV" = "prod" ]; then
    INTERVAL=5   # Interval in seconds
    SECONDS=0    # Built-in Bash variable that tracks elapsed seconds
 
-   source "${CURRENT_PATH}/aws_credentials.sh"
+   if [[ -z "$GITHUB_ACTIONS" ]]; then
+    source "${CURRENT_PATH}/aws_credentials.sh"
+   fi
 
    #Create S3 bucket to store terraform remote state.
    source "${CURRENT_PATH}/scripts/terraform-state-setup.sh"
@@ -80,14 +82,29 @@ elif [ "$ENV" = "prod" ]; then
    # Navigate to the production directory
    cd "${CURRENT_PATH}/infra/app-infra"
    
+   terraform version
+
    # Initialize Terraform for the prod environment
    terraform init
+   if [ $? -ne 0 ]; then
+    echo "Terraform init failed"
+    exit 1  
+   fi
 
    # Plan the production deployment
-   terraform plan 
+   terraform plan
+   if [ $? -ne 0 ]; then
+    echo "Terraform plan failed"
+    exit 1  
+   fi
 
    # Apply the production deployment
    terraform apply ${AUTO_APPROVE_FLAG}
+
+   if [ $? -ne 0 ]; then
+    echo "Terraform apply was rejected or failed. Exiting script..."
+    exit 1  
+  fi
   
    # Set KUBECONFIG dynamically, generated from EKS.
    export KUBECONFIG="${CURRENT_PATH}/infra/app-infra/kubeconfig"
@@ -134,10 +151,11 @@ elif [ "$ENV" = "prod" ]; then
     echo "Error: Failed to apply the manifests."
     exit 1
    fi
-
+   
+   NEW_TIMEOUT=$((TIMEOUT + 200))
    # Wait for the deployment to become available
-    execute_with_wait "Waiting for 'message-api' pods to be ready for ${TIMEOUT} seconds" \
-      $TIMEOUT \
+    execute_with_wait "Waiting for 'message-api' pods to be ready for ${NEW_TIMEOUT} seconds" \
+      $NEW_TIMEOUT \
       "kubectl get deployment message-api -n message-api -o jsonpath=\"{.status.conditions[?(@.type=='Available')].status}\" | grep -q True"
 
    #Run tests

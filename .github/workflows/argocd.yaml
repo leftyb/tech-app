@@ -1,0 +1,61 @@
+name: Deploy ArgoCD to AWS EKS
+
+on:
+  workflow_call:
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      AWS_DEFAULT_REGION:
+        required: true
+
+jobs:
+  deploy-argocd:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS CLI
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+
+      - name: Configure Kubeconfig for EKS
+        run: aws eks update-kubeconfig --name eks-tech-app --region ${{ secrets.AWS_DEFAULT_REGION }}
+
+      - name: Verify Kubernetes Connection
+        run: kubectl get nodes
+
+      - name: Install ArgoCD on EKS
+        run: |
+          kubectl create namespace argocd || true
+          kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+          kubectl wait --for=condition=available --timeout=300s deployment -n argocd -l app.kubernetes.io/name=argocd-server
+
+      - name: Expose ArgoCD API
+        run: |
+            kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+     
+      - name: Get ArgoCD LoadBalancer URL
+        run: |
+              echo "Waiting for LoadBalancer external IP..."
+              sleep 30  # Wait for AWS to allocate an external IP/DNS
+              ARGOCD_URL=$(kubectl get svc argocd-server -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+              echo "ArgoCD is accessible at: http://$ARGOCD_URL"
+              echo "ARGOCD_URL=$ARGOCD_URL" >> $GITHUB_ENV
+
+      - name: Set Repository URL in ArgoCD Application
+        run: |
+            REPO_URL="https://github.com/${{ github.repository }}.git"
+            echo "Using repo URL: $REPO_URL"
+            sed -i "s|__REPO_URL__|$REPO_URL|g" argocd-app/app.yaml  # Replace in file
+        
+      - name: Deploy ArgoCD Application from `argocd-app`
+        run: |
+            kubectl apply -f argocd-app/ -n argocd
+            kubectl get applications -n argocd

@@ -1,0 +1,56 @@
+name: Deploy or Clean Up with Devbox and Terraform
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Choose an action (create or destroy)"
+        required: true
+        default: "create"
+        type: choice
+        options:
+          - create
+          - destroy
+          - argocd-deploy
+
+jobs:
+  deploy-or-cleanup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Devbox
+        run: |
+          curl -fsSL https://get.jetpack.io/devbox | bash -s -- -f
+          echo "$HOME/.devbox/bin" >> $GITHUB_PATH  # Add Devbox to PATH      
+
+      - name: Configure AWS CLI
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+
+      - name: Verify Devbox Installation
+        run: devbox version
+      
+      - name: Deploy with Terraform in Devbox
+        if: github.event.inputs.action == 'create'
+        run:  devbox run --env ENV=prod --env TF_AUTO_APPROVE=true setup-all -q
+
+      - name: Configure Kubeconfig for EKS
+        if: github.event.inputs.action == 'destroy'
+        run: |
+          aws eks update-kubeconfig --name eks-tech-app --region ${{ secrets.AWS_DEFAULT_REGION }} --kubeconfig $GITHUB_WORKSPACE/infra/app-infra/kubeconfig
+      
+
+      - name: Cleanup with Terraform in Devbox
+        if: github.event.inputs.action == 'destroy'
+        run: devbox run --env ENV=prod --env TF_AUTO_APPROVE=true clean-all -q
+  
+  argocd-deploy:
+    if: github.event.inputs.action == 'argocd-deploy'
+    uses: ./.github/workflows/argocd.yaml # Calls the ArgoCD workflow
+    secrets: inherit
