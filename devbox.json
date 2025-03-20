@@ -1,0 +1,21 @@
+{
+    "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.12.0/.schema/devbox.schema.json",
+    "packages": [
+      "kind",
+      "kubectl",
+      "python3",    
+      "terraform",
+      "awscli2",
+      "python312Packages.requests",
+      "jq"
+    ],
+    "shell": {
+      "init_hook": [
+        "# Run the setup script from the scripts directory",
+        "bash ./scripts/setup.sh"
+      ],
+    "scripts": {
+      "clean-all": "bash ./scripts/cleanup.sh"
+     }
+    }
+  }

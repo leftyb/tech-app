@@ -1,0 +1,55 @@
+# namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: message-api
+  labels:
+    app: message-api
+
+---
+# deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: message-api
+  namespace: message-api
+  labels:
+    app: message-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: message-api
+  template:
+    metadata:
+      labels:
+        app: message-api
+    spec:
+      containers:
+      - name: message-api
+        image: leftybanos/tech-app:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+      tolerations:
+      - key: "node.kubernetes.io/not-ready"
+        operator: "Exists"
+        effect: "NoSchedule"
+
+---
+# service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: message-api
+  namespace: message-api
+  labels:
+    app: message-api
+spec:
+  selector:
+    app: message-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
+  type: LoadBalancer
