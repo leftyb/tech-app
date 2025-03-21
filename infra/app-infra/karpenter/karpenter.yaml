@@ -42,9 +42,9 @@ spec:
         kind: EC2NodeClass
         name: default  # Reference to the EC2NodeClass
   limits:
-    cpu: "2"  # Set maximum CPU limit to 2 vCPUs
+    cpu: "4"  # Set maximum CPU limit to 2 vCPUs
   disruption:
     consolidationPolicy: WhenEmptyOrUnderutilized
-    consolidateAfter: 5s
+    consolidateAfter: 15s
     budgets:
-      - nodes: "100%"
+      - nodes: "80%"

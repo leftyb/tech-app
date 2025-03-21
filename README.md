@@ -170,7 +170,10 @@ PLease make sure that you delete all the remaining resources manually if needed.
   - Try to apply again, and if not success delete them manually from the console.
   - Check it the S3 bucket `tech-app-state-bucket` is deleted as well.
   - Check that all `ec2` instances are destroyed. Due to that are automatically created from `Karpenter` and not managed from `terraform`
+    - `clean-all` script should take care of the non terraform managed instances as well. But is good to check after running it at the AWS EC2 console.
   - Check that all `VPC` resources are deleted.
+    - Subnets, NAT gateway, etc
+  - Check at the `IAM` for leftover roles or policies. As as well might get created and not managed from terraform.
 
 #### Details on execution
 
