@@ -27,7 +27,6 @@ execute_with_wait() {
     done
 
     echo "" 
-
     
     eval "$command"
     return $?  # Return the result of the command execution
@@ -64,7 +63,6 @@ if [ "$ENV" = "dev" ]; then
   # Test the app
   python3 -m unittest discover -s test-app/ -p 'test_svc.py'
   
-
 elif [ "$ENV" = "prod" ]; then
    echo "Setting up Prod environment..."
       
@@ -100,11 +98,10 @@ elif [ "$ENV" = "prod" ]; then
 
    # Apply the production deployment
    terraform apply ${AUTO_APPROVE_FLAG}
-
    if [ $? -ne 0 ]; then
     echo "Terraform apply was rejected or failed. Exiting script..."
     exit 1  
-  fi
+   fi
   
    # Set KUBECONFIG dynamically, generated from EKS.
    export KUBECONFIG="${CURRENT_PATH}/infra/app-infra/kubeconfig"
@@ -144,7 +141,7 @@ elif [ "$ENV" = "prod" ]; then
       echo " Error: "kube-system" pods not become ready after ${TIMEOUT} seconds."
       exit 1
    fi  
-
+   
    # Apply the manifests
    kubectl apply -f "${CURRENT_PATH}/app-manifests"
    if [ $? -ne 0 ]; then
@@ -157,7 +154,7 @@ elif [ "$ENV" = "prod" ]; then
     execute_with_wait "Waiting for 'message-api' pods to be ready for ${NEW_TIMEOUT} seconds" \
       $NEW_TIMEOUT \
       "kubectl get deployment message-api -n message-api -o jsonpath=\"{.status.conditions[?(@.type=='Available')].status}\" | grep -q True"
-
+   
    #Run tests
    python3 -m unittest discover -s "${CURRENT_PATH}/test-app/" -p 'test_*.py'
 

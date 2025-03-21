@@ -22,14 +22,13 @@ endpoint that returns the following JSON payload
 - We should be able to deploy and run the application in our own public cloud accounts.
 - Include some form of automated tests to validate the environment.
 
-
 ## Modes
 
 Two modes of execution are provided `dev` and `prod`
 
 ### Development (dev)
-
-    This mode runs entirely on the local machine using `Kind` cluster.
+  
+This mode runs entirely on the local machine using `Kind` cluster.
 
 #### Prerequisites  
 
@@ -134,10 +133,20 @@ Steps that are done automatically:
 A workflow is as well available just for the `prod` mode.
 
 - Create: Uses same `devbox` script to create the `EKS` cluster and apply the `app` manifests and run the tests.
-  - The bad thing with this is that `devbox` setup takes too long. Up to `30 minutes`
+  - The bad thing with this is that `devbox` setup takes too long. Up to `30 minutes` :sweat:
 - Destroy: Uses same `devbox` scripts to destroy the created `AWS` resources.
-  - Please refair to [ Manually Destroy Section](#destroy-all-infrastucture-manually) for some additional information.
-- argocd: Deploys `argocd` at the created cluster, and applies an argocd application that is linked to the `app-manifests` dir in same repo, where the demo app manifests are located. 
+  - Please refer to [ Manually Destroy Section](#destroy-all-infrastucture-manually) for some additional information.
+- For the AWS authentication, is necessary to create Github `Actions secrets` for:
+  - AWS_ACCESS_KEY_ID
+  - AWS_SECRET_ACCESS_KEY
+  - AWS_DEFAULT_REGION
+- argocd: Deploys `argocd` at the created cluster, and applies an argocd application that is linked to the `app-manifests` dir in same repo, where the demo app manifests are located.
+  - When argocd in installed in order to login to UI do following:
+    - locally get `kubeconfig` of cluster: `aws eks update-kubeconfig --name eks-tech-app  --kubeconfig kubeconfig`
+    - Export your AWS credentials locally if not done yet: `source aws_credentials.sh`
+    - Get ArgoCD LoadBalancer URL:  `ARGOCD_URL=$(kubectl get svc argocd-server -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')`
+    - Get ArgoCD `Admin` password: `kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d`
+  - ArgoCD is accessible at: `https://$ARGOCD_URL`
 
 ## Addition information
 

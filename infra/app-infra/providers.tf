@@ -11,8 +11,6 @@ terraform {
   backend "s3" {
     bucket = "tech-app-state-bucket"    
     key    = "tech-app/terraform.tfstate"  
-    region = var.region                  
     encrypt = true                           
   }
 }
-
