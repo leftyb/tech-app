@@ -134,6 +134,7 @@ A workflow is as well available just for the `prod` mode.
 
 - Create: Uses same `devbox` script to create the `EKS` cluster and apply the `app` manifests and run the tests.
   - The bad thing with this is that `devbox` setup takes too long. Up to `30 minutes` :sweat:
+  - For terraform `-auto-approve` is used, so be sure that you want to create the entire infrastructure or first test it locally.
 - Destroy: Uses same `devbox` scripts to destroy the created `AWS` resources.
   - Please refer to [ Manually Destroy Section](#destroy-all-infrastucture-manually) for some additional information.
 - For the AWS authentication, is necessary to create Github `Actions secrets` for:
